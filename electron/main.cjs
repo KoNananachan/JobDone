@@ -3,6 +3,9 @@ const path = require('node:path');
 const fs = require('node:fs');
 
 const isDev = process.env.NODE_ENV === 'development';
+const isMac = process.platform === 'darwin';
+const isWin = process.platform === 'win32';
+
 const userDataDir = app.getPath('userData');
 const dataFile = path.join(userDataDir, 'jobdone.json');
 
@@ -35,9 +38,6 @@ function writeData(data) {
   }
 }
 
-// Take a snapshot copy of jobdone.json on launch as a defensive backup
-// across version updates. Skip if the most recent snapshot is < 24h old,
-// and prune to keep at most 10 snapshots total.
 function snapshotOnLaunch() {
   try {
     if (!fs.existsSync(dataFile)) return;
@@ -73,6 +73,15 @@ function createWindow() {
   const winWidth = 320;
   const winHeight = 400;
 
+  // Background material differs per OS:
+  //   - macOS: vibrancy 'under-window' (built-in blur behind a transparent window)
+  //   - Windows 11: backgroundMaterial 'acrylic' (blur), falls back to opaque on Win10
+  const platformBg = isMac
+    ? { vibrancy: 'under-window', visualEffectState: 'active' }
+    : isWin
+      ? { backgroundMaterial: 'acrylic' }
+      : {};
+
   mainWindow = new BrowserWindow({
     width: winWidth,
     height: winHeight,
@@ -87,8 +96,8 @@ function createWindow() {
     minHeight: 360,
     alwaysOnTop: true,
     skipTaskbar: false,
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
+    icon: isWin ? path.join(__dirname, '..', 'build', 'icon.ico') : undefined,
+    ...platformBg,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -98,7 +107,9 @@ function createWindow() {
   });
 
   mainWindow.setAlwaysOnTop(true, 'floating');
-  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  if (isMac) {
+    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  }
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5180');
@@ -111,16 +122,29 @@ function createWindow() {
   });
 }
 
+function trayIconImage() {
+  const buildDir = path.join(__dirname, '..', 'build');
+  if (isMac) {
+    const p = path.join(buildDir, 'trayTemplate.png');
+    const img = nativeImage.createFromPath(p);
+    img.setTemplateImage(true);
+    return img;
+  }
+  if (isWin) {
+    return nativeImage.createFromPath(path.join(buildDir, 'icon.ico'));
+  }
+  return nativeImage.createFromPath(path.join(buildDir, 'tray.png'));
+}
+
 function createTray() {
-  const icon = nativeImage.createEmpty();
-  tray = new Tray(icon);
-  tray.setTitle('✓');
+  tray = new Tray(trayIconImage());
+  tray.setToolTip('JobDone');
   const menu = Menu.buildFromTemplate([
     { label: 'Show JobDone', click: () => mainWindow && mainWindow.show() },
     { label: 'Hide JobDone', click: () => mainWindow && mainWindow.hide() },
     { type: 'separator' },
     {
-      label: 'Toggle Always On Top',
+      label: 'Always on top',
       type: 'checkbox',
       checked: true,
       click: (item) => mainWindow && mainWindow.setAlwaysOnTop(item.checked, 'floating'),
@@ -155,7 +179,10 @@ app.whenReady().then(() => {
   });
 });
 
+// Keep the app alive in the tray on macOS. On Windows, closing the window
+// hides to tray (window:close just calls hide); user quits via tray menu.
 app.on('window-all-closed', () => {
-  // Keep app alive in tray on macOS
-  if (process.platform !== 'darwin') app.quit();
+  if (!isMac) {
+    // Don't quit — the tray icon remains active. Re-show via tray menu.
+  }
 });

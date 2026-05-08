@@ -4,14 +4,15 @@
 
 # JobDone
 
-**A floating, always-on-top todo widget for macOS that makes shipping feel good.**
+**A floating, always-on-top todo widget that makes shipping feel good.**
 
 Three states. Confetti when you finish. Lives in the corner of every workspace.
 Your data stays on your machine.
 
 [![macOS](https://img.shields.io/badge/macOS-11%2B-000?logo=apple&logoColor=white)](#install)
+[![Windows](https://img.shields.io/badge/Windows-10%2B-0078d6?logo=windows&logoColor=white)](#install)
+[![Latest release](https://img.shields.io/github/v/release/KoNananachan/JobDone?label=download&color=7c5cff)](https://github.com/KoNananachan/JobDone/releases/latest)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-19d39c)](LICENSE)
-[![Built with Electron](https://img.shields.io/badge/built%20with-Electron%20%2B%20React-7c5cff)](https://www.electronjs.org/)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-19d39c)](#privacy)
 [![English / 中文](https://img.shields.io/badge/i18n-EN%20%2F%20%E4%B8%AD%E6%96%87-4dd0ff)](#language)
 
@@ -42,7 +43,38 @@ JobDone is **a single 320×400 frame that's always there**, always on top, alway
 
 ## Install
 
-> JobDone is unsigned right now (no Apple Developer ID). The first time you open it, **right-click → Open** and confirm. Subsequent launches work normally.
+Grab the prebuilt binary for your platform from the
+[**Releases page**](https://github.com/KoNananachan/JobDone/releases/latest).
+
+### macOS
+
+1. Download `JobDone-<version>-mac-arm64.dmg` (Apple Silicon) or `-mac-x64.dmg` (Intel).
+2. Open the `.dmg`, drag **JobDone** into the **Applications** folder.
+3. First launch: **right-click → Open** in Finder, then confirm — JobDone is unsigned (no Apple Developer ID), so Gatekeeper asks once.
+
+### Windows
+
+1. Download `JobDone-<version>-win-x64.exe` (most PCs) or `-win-arm64.exe`.
+2. Double-click the installer — it runs silently and launches JobDone when done.
+3. Smartscreen may show a "Windows protected your PC" warning the first time. Click **More info → Run anyway** (the binary is unsigned).
+
+> Prefer no installer? Grab `JobDone-<version>-win-x64-portable.exe` — a single executable that runs without installing anything.
+
+### Auto-launch on login
+
+- **macOS**: System Settings → General → Login Items → drag `JobDone.app` in.
+- **Windows**: the installer optionally creates a Start Menu / Desktop shortcut; to launch on login, press `Win + R` → type `shell:startup` → drop a shortcut to `JobDone.exe` there.
+
+### Updating to a new version
+
+Your data lives **outside** the application bundle, so updates are safe.
+
+- **macOS**: `~/Library/Application Support/jobdone/jobdone.json`
+- **Windows**: `%APPDATA%\jobdone\jobdone.json`
+
+Download a newer release, replace the app, relaunch — your tasks come back.
+
+JobDone also writes a defensive snapshot on launch (max one per 24 h, keeping the last 10) next to `jobdone.json`. If anything ever goes sideways, copy the most recent `jobdone.snapshot-…json` back over `jobdone.json` and relaunch.
 
 ### Build from source
 
@@ -50,38 +82,9 @@ JobDone is **a single 320×400 frame that's always there**, always on top, alway
 git clone https://github.com/KoNananachan/JobDone.git
 cd JobDone
 npm install
-npm run dist        # → release/mac-arm64/JobDone.app
-
-# install it
-mv release/mac-arm64/JobDone.app ~/Applications/
-open ~/Applications/JobDone.app
+npm run dist:mac     # → release/JobDone-*-mac-*.dmg
+npm run dist:win     # → release/JobDone-*-win-*.exe (needs Wine on macOS/Linux)
 ```
-
-That's it. Launch once, then drag `~/Applications/JobDone.app` to your Dock.
-
-### Auto-launch on login
-
-System Settings → General → Login Items → drag `JobDone.app` into the list.
-
-### Updating to a new version
-
-Your data lives **outside** the `.app` bundle, at
-`~/Library/Application Support/jobdone/jobdone.json`, so updating is safe — just rebuild and replace:
-
-```bash
-cd JobDone
-git pull
-npm install        # only if package.json changed
-npm run dist
-rm -rf ~/Applications/JobDone.app
-cp -R release/mac-arm64/JobDone.app ~/Applications/
-```
-
-JobDone also writes a defensive snapshot of your data on launch (max one per
-24 h, keeping the last 10) at
-`~/Library/Application Support/jobdone/jobdone.snapshot-YYYY-MM-DDTHH-MM-SS.json`.
-If anything ever goes sideways, copy the most recent snapshot back over
-`jobdone.json` and relaunch.
 
 ## Usage
 
@@ -114,7 +117,7 @@ JobDone is offline-first by design.
 - No accounts, no sign-in
 - No network requests after launch (everything runs locally)
 - No analytics, no crash reporting, no telemetry
-- All data lives in a single file at `~/Library/Application Support/jobdone/jobdone.json`
+- All data lives in a single file (`jobdone/jobdone.json` under your platform's app-data directory: `~/Library/Application Support/` on macOS, `%APPDATA%` on Windows)
 - On each launch a defensive snapshot is written next to it (`jobdone.snapshot-…json`, last 10 kept), so updates can't accidentally lose your tasks
 
 To wipe everything, delete that folder.
@@ -163,11 +166,12 @@ iconutil -c icns build/icon.iconset -o build/icon.icns
 
 ## Roadmap
 
-- [ ] Signed + notarized release builds (Apple Developer ID)
+- [x] Drag to reorder tasks
+- [x] Windows builds (NSIS installer + portable exe)
+- [ ] Signed + notarized release builds (Apple Developer ID + Microsoft cert)
 - [ ] Global hotkey to focus the input from anywhere
-- [ ] Drag to reorder tasks
 - [ ] Optional Markdown-style links in task text
-- [ ] Linux + Windows builds (the renderer already runs there; just needs window-management polish)
+- [ ] Linux AppImage / .deb builds
 
 ## Contributing
 
