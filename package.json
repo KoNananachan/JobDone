@@ -35,10 +35,10 @@
     "dev": "concurrently -k -n vite,electron -c cyan,magenta \"npm:dev:vite\" \"npm:dev:electron\"",
     "build": "vite build",
     "start": "cross-env NODE_ENV=production electron .",
-    "pack": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir",
-    "dist": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
-    "dist:mac": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --arm64 --x64",
-    "dist:win": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --arm64",
+    "pack": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish never --dir",
+    "dist": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish never",
+    "dist:mac": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish never --mac --arm64 --x64",
+    "dist:win": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish never --win --x64 --arm64",
     "make-icons": "electron scripts/make-icons.cjs"
   },
   "build": {
