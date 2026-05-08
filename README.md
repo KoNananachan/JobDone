@@ -10,7 +10,7 @@ Three states. Confetti when you finish. Lives in the corner of every workspace.
 Your data stays on your machine.
 
 [![macOS](https://img.shields.io/badge/macOS-11%2B-000?logo=apple&logoColor=white)](#install)
-[![License: MIT](https://img.shields.io/badge/license-MIT-19d39c)](LICENSE)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-19d39c)](LICENSE)
 [![Built with Electron](https://img.shields.io/badge/built%20with-Electron%20%2B%20React-7c5cff)](https://www.electronjs.org/)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-19d39c)](#privacy)
 [![English / 中文](https://img.shields.io/badge/i18n-EN%20%2F%20%E4%B8%AD%E6%96%87-4dd0ff)](#language)
@@ -177,7 +177,11 @@ For new translations, add a locale to `src/i18n.ts` following the existing Engli
 
 ## License
 
-MIT © 2026 [KoNananachan](https://github.com/KoNananachan). See [LICENSE](LICENSE).
+[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/) © 2026 [KoNananachan](https://github.com/KoNananachan).
+
+You can use, modify, and redistribute JobDone for **any noncommercial purpose** — personal use, hobby projects, research, education, charity, government work — for free, forever. Selling it, bundling it into a commercial product, or running it as a paid service requires a separate commercial license; reach out via [GitHub Issues](https://github.com/KoNananachan/JobDone/issues) if that's you.
+
+See [LICENSE](LICENSE) for the full terms.
 
 ---
 
