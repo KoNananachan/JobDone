@@ -135,6 +135,30 @@ button { font-family: inherit; }
 }
 .composer-cat-name { line-height: 1; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.composer-wl-wrap { position: relative; flex-shrink: 0; }
+.composer-wl-chip {
+  height: 26px;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 0 6px;
+  border: 0; border-radius: 7px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.composer-wl-chip:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+.composer-wl-emoji {
+  font-size: 12px;
+  line-height: 1;
+  filter: saturate(1.05);
+}
+.popover-emoji {
+  font-size: 12px;
+  line-height: 1;
+  width: 8px; display: inline-flex; justify-content: center;
+}
+
 .composer-input {
   flex: 1; border: 0; background: transparent;
   color: var(--text); font-size: 12.5px;
@@ -247,20 +271,43 @@ button { font-family: inherit; }
 
 /* Row — single line, compact */
 .row {
-  --row-color: transparent;
+  --row-color: rgba(255, 255, 255, 0.18);
   display: flex; align-items: center;
-  gap: 7px;
+  gap: 6px;
   padding: 4px 6px 4px 9px;
   border-radius: 7px;
   margin-bottom: 1px;
   position: relative;
   min-height: 28px;
-  transition: background 140ms;
+  cursor: grab;
+  transition: background 140ms, opacity 140ms;
   animation: row-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
+.row:active { cursor: grabbing; }
 .row:hover { background: var(--surface-hover); }
 .row:hover .row-actions { opacity: 1; transform: translateX(0); }
 .row:hover .row-tail { opacity: 0; }
+.row-dragging { opacity: 0.4; }
+.row-drop-target::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 6px; right: 6px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 2px;
+  pointer-events: none;
+}
+.row-wl {
+  font-size: 11.5px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: saturate(1.05);
+}
+.mini-emoji {
+  font-size: 11.5px;
+  line-height: 1;
+  filter: saturate(0.85);
+}
 
 .row-rail {
   position: absolute;

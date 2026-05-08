@@ -1,4 +1,5 @@
 export type TaskStatus = 'active' | 'waiting' | 'done';
+export type Workload = 'S' | 'M' | 'L';
 
 export interface Task {
   id: string;
@@ -9,6 +10,7 @@ export interface Task {
   doneAt?: number;
   note?: string;
   categoryId?: string;
+  workload?: Workload;
 }
 
 export interface Category {
@@ -23,6 +25,9 @@ export interface Settings {
   alwaysOnTop?: boolean;
   activeCategoryId?: string;
   locale?: Locale;
+  // One-time flag: pre-categories tasks (where categoryId was undefined)
+  // get auto-assigned to the first category once.
+  migratedUncategorizedToWork?: boolean;
 }
 
 export interface AppData {

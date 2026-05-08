@@ -20,11 +20,22 @@ function normalize(data: Partial<AppData> | null | undefined): AppData {
   const cats = data?.categories && data.categories.length > 0
     ? data.categories
     : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
-  return {
-    tasks: data?.tasks || [],
-    categories: cats,
-    settings: { ...empty.settings, ...(data?.settings || {}) },
-  };
+  let tasks = data?.tasks || [];
+  const settings = { ...empty.settings, ...(data?.settings || {}) };
+
+  // One-time migration: tasks created before the category feature have
+  // categoryId === undefined. Auto-assign them to the first category so
+  // every row has a colored rail. Future explicit "Uncategorized" picks
+  // are preserved (the migration runs only once, gated by this flag).
+  if (!settings.migratedUncategorizedToWork && tasks.length > 0) {
+    const firstCatId = cats[0]?.id;
+    if (firstCatId) {
+      tasks = tasks.map((t) => (t.categoryId ? t : { ...t, categoryId: firstCatId }));
+    }
+    settings.migratedUncategorizedToWork = true;
+  }
+
+  return { tasks, categories: cats, settings };
 }
 
 export async function loadData(): Promise<AppData> {

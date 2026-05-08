@@ -1,10 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { AppData, Category, Locale, Task, TaskStatus } from './types';
+import type { AppData, Category, Locale, Task, TaskStatus, Workload } from './types';
 import { CATEGORY_PALETTE, loadData, saveData, uid } from './store';
 import { Confetti } from './confetti';
 import { STRINGS, getLocaleFromSystem, type Strings } from './i18n';
 
 type FilterTab = 'all' | 'active' | 'waiting' | 'done';
+
+const WORKLOAD_CYCLE: (Workload | undefined)[] = [undefined, 'S', 'M', 'L'];
+
+function workloadEmoji(w?: Workload): string {
+  if (w === 'S') return '🟢';
+  if (w === 'M') return '🟡';
+  if (w === 'L') return '🔴';
+  return '';
+}
+function workloadLabel(w: Workload | undefined, t: Strings): string {
+  if (w === 'S') return t.workloadS;
+  if (w === 'M') return t.workloadM;
+  if (w === 'L') return t.workloadL;
+  return t.workloadNone;
+}
 
 function startOfDay(ts: number) {
   const d = new Date(ts);
@@ -45,6 +60,10 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [composerCatId, setComposerCatId] = useState<string | undefined>(undefined);
   const [showComposerCat, setShowComposerCat] = useState(false);
+  const [composerWorkload, setComposerWorkload] = useState<Workload | undefined>(undefined);
+  const [showComposerWorkload, setShowComposerWorkload] = useState(false);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const locale: Locale = data.settings.locale || 'en';
@@ -120,9 +139,36 @@ export default function App() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       categoryId: composerCatId,
+      workload: composerWorkload,
     };
     setData((d) => ({ ...d, tasks: [task, ...d.tasks] }));
     setDraft('');
+  }
+
+  function cycleTaskWorkload(id: string) {
+    setData((d) => ({
+      ...d,
+      tasks: d.tasks.map((t) => {
+        if (t.id !== id) return t;
+        const idx = WORKLOAD_CYCLE.indexOf(t.workload);
+        const next = WORKLOAD_CYCLE[(idx + 1) % WORKLOAD_CYCLE.length];
+        return { ...t, workload: next, updatedAt: Date.now() };
+      }),
+    }));
+  }
+
+  function reorderTasks(sourceId: string, targetId: string) {
+    if (sourceId === targetId) return;
+    setData((d) => {
+      const ts = [...d.tasks];
+      const sourceIdx = ts.findIndex((t) => t.id === sourceId);
+      const targetIdx = ts.findIndex((t) => t.id === targetId);
+      if (sourceIdx < 0 || targetIdx < 0) return d;
+      const [moved] = ts.splice(sourceIdx, 1);
+      const newTargetIdx = ts.findIndex((t) => t.id === targetId);
+      ts.splice(newTargetIdx, 0, moved);
+      return { ...d, tasks: ts };
+    });
   }
 
   function setStatus(id: string, status: TaskStatus) {
@@ -268,6 +314,10 @@ export default function App() {
         showCatMenu={showComposerCat}
         setShowCatMenu={setShowComposerCat}
         onPickCategory={(id) => { setComposerCatId(id); setShowComposerCat(false); }}
+        workload={composerWorkload}
+        showWorkloadMenu={showComposerWorkload}
+        setShowWorkloadMenu={setShowComposerWorkload}
+        onPickWorkload={(w) => { setComposerWorkload(w); setShowComposerWorkload(false); }}
       />
 
       <nav className="tabs">
@@ -294,6 +344,8 @@ export default function App() {
               categories={categories}
               editing={editingId === task.id}
               editingText={editingText}
+              dragging={draggedId === task.id}
+              dropTarget={dropTargetId === task.id && draggedId !== task.id}
               onEditStart={() => startEdit(task)}
               onEditChange={setEditingText}
               onEditCommit={commitEdit}
@@ -303,6 +355,32 @@ export default function App() {
               onDone={() => setStatus(task.id, task.status === 'done' ? 'active' : 'done')}
               onDelete={() => removeTask(task.id)}
               onMoveCategory={(catId) => moveTaskCategory(task.id, catId)}
+              onCycleWorkload={() => cycleTaskWorkload(task.id)}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', task.id);
+                setDraggedId(task.id);
+              }}
+              onDragOver={(e) => {
+                if (!draggedId || draggedId === task.id) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dropTargetId !== task.id) setDropTargetId(task.id);
+              }}
+              onDragLeave={() => {
+                if (dropTargetId === task.id) setDropTargetId(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const sourceId = draggedId || e.dataTransfer.getData('text/plain');
+                if (sourceId) reorderTasks(sourceId, task.id);
+                setDraggedId(null);
+                setDropTargetId(null);
+              }}
+              onDragEnd={() => {
+                setDraggedId(null);
+                setDropTargetId(null);
+              }}
             />
           ))
         )}
@@ -323,6 +401,7 @@ export default function App() {
 function ComposerRow({
   t, draft, setDraft, onSubmit, placeholder, inputRef,
   category, categories, showCatMenu, setShowCatMenu, onPickCategory,
+  workload, showWorkloadMenu, setShowWorkloadMenu, onPickWorkload,
 }: {
   t: Strings;
   draft: string;
@@ -335,11 +414,16 @@ function ComposerRow({
   showCatMenu: boolean;
   setShowCatMenu: (b: boolean) => void;
   onPickCategory: (id: string | undefined) => void;
+  workload: Workload | undefined;
+  showWorkloadMenu: boolean;
+  setShowWorkloadMenu: (b: boolean) => void;
+  onPickWorkload: (w: Workload | undefined) => void;
 }) {
-  const wrapRef = useClickOutside<HTMLDivElement>(showCatMenu, () => setShowCatMenu(false));
+  const catRef = useClickOutside<HTMLDivElement>(showCatMenu, () => setShowCatMenu(false));
+  const wlRef = useClickOutside<HTMLDivElement>(showWorkloadMenu, () => setShowWorkloadMenu(false));
   return (
     <section className="composer">
-      <div className="composer-cat-wrap" ref={wrapRef}>
+      <div className="composer-cat-wrap" ref={catRef}>
         <button
           className="composer-cat-chip"
           onClick={() => setShowCatMenu(!showCatMenu)}
@@ -374,6 +458,39 @@ function ComposerRow({
           </div>
         )}
       </div>
+
+      <div className="composer-wl-wrap" ref={wlRef}>
+        <button
+          className="composer-wl-chip"
+          onClick={() => setShowWorkloadMenu(!showWorkloadMenu)}
+          title={t.composerWorkloadTooltip}
+        >
+          <span className="composer-wl-emoji">{workloadEmoji(workload) || '·'}</span>
+          <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/></svg>
+        </button>
+        {showWorkloadMenu && (
+          <div className="popover popover-below-left">
+            <button
+              className={`popover-item ${!workload ? 'popover-item-active' : ''}`}
+              onClick={() => onPickWorkload(undefined)}
+            >
+              <span className="popover-dot popover-dot-none" />
+              {t.workloadNone}
+            </button>
+            {(['S', 'M', 'L'] as Workload[]).map((w) => (
+              <button
+                key={w}
+                className={`popover-item ${workload === w ? 'popover-item-active' : ''}`}
+                onClick={() => onPickWorkload(w)}
+              >
+                <span className="popover-emoji">{workloadEmoji(w)}</span>
+                {workloadLabel(w, t)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <input
         ref={inputRef}
         value={draft}
@@ -399,9 +516,10 @@ function Tab({ label, count, active, onClick }: { label: string; count: number; 
 
 function TaskRow({
   t, task, category, categories,
-  editing, editingText,
+  editing, editingText, dragging, dropTarget,
   onEditStart, onEditChange, onEditCommit, onEditCancel,
-  onActive, onWait, onDone, onDelete, onMoveCategory,
+  onActive, onWait, onDone, onDelete, onMoveCategory, onCycleWorkload,
+  onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
 }: {
   t: Strings;
   task: Task;
@@ -409,6 +527,8 @@ function TaskRow({
   categories: Category[];
   editing: boolean;
   editingText: string;
+  dragging: boolean;
+  dropTarget: boolean;
   onEditStart: () => void;
   onEditChange: (s: string) => void;
   onEditCommit: () => void;
@@ -418,6 +538,12 @@ function TaskRow({
   onDone: () => void;
   onDelete: () => void;
   onMoveCategory: (id: string | undefined) => void;
+  onCycleWorkload: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragEnd: (e: React.DragEvent) => void;
 }) {
   const ageDays = daysDiff(Date.now(), task.createdAt);
   const stale = task.status !== 'done' && ageDays >= 3;
@@ -435,10 +561,24 @@ function TaskRow({
 
   return (
     <div
-      className={`row row-${task.status} ${stale ? 'row-stale' : ''}`}
+      className={`row row-${task.status} ${stale ? 'row-stale' : ''} ${dragging ? 'row-dragging' : ''} ${dropTarget ? 'row-drop-target' : ''}`}
       style={category ? { ['--row-color' as any]: category.color } : undefined}
+      draggable={!editing}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
     >
       <span className="row-rail" />
+      {task.workload && (
+        <span
+          className="row-wl"
+          title={`${t.workloadLabel}: ${workloadLabel(task.workload, t)}`}
+        >
+          {workloadEmoji(task.workload)}
+        </span>
+      )}
       <button
         className={`check check-${task.status}`}
         title={task.status === 'done' ? t.rowUnmarkDoneTitle : t.rowMarkDoneTitle}
@@ -472,6 +612,9 @@ function TaskRow({
       {tail && !editing && <span className="row-tail">{tail}</span>}
 
       <div className="row-actions">
+        <button className="mini-btn" title={`${t.rowCycleWorkloadTitle} · ${workloadLabel(task.workload, t)}`} onClick={onCycleWorkload}>
+          <span className="mini-emoji">{workloadEmoji(task.workload) || '·'}</span>
+        </button>
         <button className="mini-btn" title={t.rowEditTitle} onClick={onEditStart}>
           <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 12l1-3 6-6 2 2-6 6-3 1z" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinejoin="round"/></svg>
         </button>

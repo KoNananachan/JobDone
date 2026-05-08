@@ -32,6 +32,13 @@ export interface Strings {
   rowUnmarkDoneTitle: string;
   rowEditTooltip: string;
   composerCatTooltip: string;
+  composerWorkloadTooltip: string;
+  workloadLabel: string;
+  workloadNone: string;
+  workloadS: string;
+  workloadM: string;
+  workloadL: string;
+  rowCycleWorkloadTitle: string;
   settingsCategories: string;
   settingsCategoriesHintMain: string;
   settingsCategoriesHintNote: string;
@@ -86,8 +93,15 @@ export const STRINGS: Record<Locale, Strings> = {
     rowDeleteTitle: 'Delete',
     rowMarkDoneTitle: 'Mark done',
     rowUnmarkDoneTitle: 'Mark active',
-    rowEditTooltip: 'Double-click or click ✎ to edit',
+    rowEditTooltip: 'Double-click or click ✎ to edit · drag to reorder',
     composerCatTooltip: 'Pick category (default: Work)',
+    composerWorkloadTooltip: 'Workload (optional)',
+    workloadLabel: 'Workload',
+    workloadNone: 'No workload',
+    workloadS: 'Small',
+    workloadM: 'Medium',
+    workloadL: 'Large',
+    rowCycleWorkloadTitle: 'Cycle workload',
     settingsCategories: 'Categories',
     settingsCategoriesHintMain:
       'Click the dot to cycle color. Click ✎ or double-click the name to rename.',
@@ -142,8 +156,15 @@ export const STRINGS: Record<Locale, Strings> = {
     rowDeleteTitle: '删除',
     rowMarkDoneTitle: '标记已完成',
     rowUnmarkDoneTitle: '取消完成',
-    rowEditTooltip: '双击或点 ✎ 编辑',
+    rowEditTooltip: '双击或点 ✎ 编辑 · 拖动可调整顺序',
     composerCatTooltip: '选择分类（默认：工作）',
+    composerWorkloadTooltip: '工作量（可选）',
+    workloadLabel: '工作量',
+    workloadNone: '不设',
+    workloadS: '轻量',
+    workloadM: '中等',
+    workloadL: '重型',
+    rowCycleWorkloadTitle: '切换工作量',
     settingsCategories: '分类',
     settingsCategoriesHintMain: '点小圆点切换颜色，点 ✎ 或双击名字来重命名。',
     settingsCategoriesHintNote: '删除分类不会删任务，原任务会变成「未分类」。',
