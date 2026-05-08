@@ -465,7 +465,7 @@ function ComposerRow({
           onClick={() => setShowWorkloadMenu(!showWorkloadMenu)}
           title={t.composerWorkloadTooltip}
         >
-          <span className="composer-wl-emoji">{workloadEmoji(workload) || '·'}</span>
+          <span className="composer-wl-emoji">{workloadEmoji(workload) || '🏋️'}</span>
           <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/></svg>
         </button>
         {showWorkloadMenu && (
@@ -613,7 +613,7 @@ function TaskRow({
 
       <div className="row-actions">
         <button className="mini-btn" title={`${t.rowCycleWorkloadTitle} · ${workloadLabel(task.workload, t)}`} onClick={onCycleWorkload}>
-          <span className="mini-emoji">{workloadEmoji(task.workload) || '·'}</span>
+          <span className="mini-emoji">{workloadEmoji(task.workload) || '🏋️'}</span>
         </button>
         <button className="mini-btn" title={t.rowEditTitle} onClick={onEditStart}>
           <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 12l1-3 6-6 2 2-6 6-3 1z" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinejoin="round"/></svg>
