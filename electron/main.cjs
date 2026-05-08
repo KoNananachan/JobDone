@@ -23,11 +23,47 @@ function readData() {
 function writeData(data) {
   try {
     fs.mkdirSync(path.dirname(dataFile), { recursive: true });
-    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2), 'utf8');
+    // Atomic write: write to temp file then rename so a crash mid-write
+    // can't truncate the existing data file.
+    const tmp = `${dataFile}.tmp-${process.pid}`;
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tmp, dataFile);
     return true;
   } catch (err) {
     console.error('writeData error', err);
     return false;
+  }
+}
+
+// Take a snapshot copy of jobdone.json on launch as a defensive backup
+// across version updates. Skip if the most recent snapshot is < 24h old,
+// and prune to keep at most 10 snapshots total.
+function snapshotOnLaunch() {
+  try {
+    if (!fs.existsSync(dataFile)) return;
+    const all = fs.readdirSync(userDataDir).filter(
+      (n) => n.startsWith('jobdone.snapshot-') && n.endsWith('.json')
+    ).sort();
+
+    const newest = all[all.length - 1];
+    if (newest) {
+      const newestPath = path.join(userDataDir, newest);
+      const stat = fs.statSync(newestPath);
+      if (Date.now() - stat.mtimeMs < 24 * 60 * 60 * 1000) return;
+    }
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    fs.copyFileSync(dataFile, path.join(userDataDir, `jobdone.snapshot-${stamp}.json`));
+
+    const after = fs.readdirSync(userDataDir).filter(
+      (n) => n.startsWith('jobdone.snapshot-') && n.endsWith('.json')
+    ).sort();
+    while (after.length > 10) {
+      const old = after.shift();
+      try { fs.unlinkSync(path.join(userDataDir, old)); } catch {}
+    }
+  } catch (err) {
+    console.error('snapshotOnLaunch error', err);
   }
 }
 
@@ -110,6 +146,7 @@ ipcMain.handle('window:set-always-on-top', (_evt, flag) => {
 });
 
 app.whenReady().then(() => {
+  snapshotOnLaunch();
   createWindow();
   createTray();
   app.on('activate', () => {

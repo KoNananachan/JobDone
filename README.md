@@ -63,6 +63,26 @@ That's it. Launch once, then drag `~/Applications/JobDone.app` to your Dock.
 
 System Settings → General → Login Items → drag `JobDone.app` into the list.
 
+### Updating to a new version
+
+Your data lives **outside** the `.app` bundle, at
+`~/Library/Application Support/jobdone/jobdone.json`, so updating is safe — just rebuild and replace:
+
+```bash
+cd JobDone
+git pull
+npm install        # only if package.json changed
+npm run dist
+rm -rf ~/Applications/JobDone.app
+cp -R release/mac-arm64/JobDone.app ~/Applications/
+```
+
+JobDone also writes a defensive snapshot of your data on launch (max one per
+24 h, keeping the last 10) at
+`~/Library/Application Support/jobdone/jobdone.snapshot-YYYY-MM-DDTHH-MM-SS.json`.
+If anything ever goes sideways, copy the most recent snapshot back over
+`jobdone.json` and relaunch.
+
 ## Usage
 
 | Action | How |
@@ -95,6 +115,7 @@ JobDone is offline-first by design.
 - No network requests after launch (everything runs locally)
 - No analytics, no crash reporting, no telemetry
 - All data lives in a single file at `~/Library/Application Support/jobdone/jobdone.json`
+- On each launch a defensive snapshot is written next to it (`jobdone.snapshot-…json`, last 10 kept), so updates can't accidentally lose your tasks
 
 To wipe everything, delete that folder.
 
