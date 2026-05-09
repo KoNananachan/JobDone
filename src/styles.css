@@ -181,15 +181,18 @@ button { font-family: inherit; }
 /* Popover */
 .popover {
   position: absolute;
-  z-index: 30;
-  background: rgba(28, 30, 44, 0.96);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
+  z-index: 100;
+  background: #1d1f2c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 4px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   display: flex; flex-direction: column;
-  min-width: 110px;
+  min-width: 120px;
+  isolation: isolate;
 }
 .popover-below-left { top: calc(100% + 2px); left: 0; }
 .popover-below-right { top: calc(100% + 2px); right: 0; }
