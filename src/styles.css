@@ -191,8 +191,8 @@ button { font-family: inherit; }
   display: flex; flex-direction: column;
   min-width: 110px;
 }
-.popover-below-left { top: 30px; left: 0; }
-.popover-below-right { top: 26px; right: 0; }
+.popover-below-left { top: calc(100% + 2px); left: 0; }
+.popover-below-right { top: calc(100% + 2px); right: 0; }
 .popover-item {
   border: 0; background: transparent;
   color: var(--text-dim);
@@ -288,6 +288,9 @@ button { font-family: inherit; }
 .row:hover .row-actions { opacity: 1; transform: translateX(0); }
 .row:hover .row-tail { opacity: 0; }
 .row-dragging { opacity: 0.4; }
+.row-menu-open { background: var(--surface-hover); }
+.row-menu-open .row-actions { opacity: 1; transform: translateX(0); }
+.row-menu-open .row-tail { opacity: 0; }
 .row-drop-target::before {
   content: '';
   position: absolute;

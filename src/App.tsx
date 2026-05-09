@@ -561,7 +561,7 @@ function TaskRow({
 
   return (
     <div
-      className={`row row-${task.status} ${stale ? 'row-stale' : ''} ${dragging ? 'row-dragging' : ''} ${dropTarget ? 'row-drop-target' : ''}`}
+      className={`row row-${task.status} ${stale ? 'row-stale' : ''} ${dragging ? 'row-dragging' : ''} ${dropTarget ? 'row-drop-target' : ''} ${showMove ? 'row-menu-open' : ''}`}
       style={category ? { ['--row-color' as any]: category.color } : undefined}
       draggable={!editing}
       onDragStart={onDragStart}
